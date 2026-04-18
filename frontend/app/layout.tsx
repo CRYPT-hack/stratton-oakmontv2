@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 
 import Header from '@/components/Header'
 import { AuthProvider } from '@/context/AuthContext'
-import AuthLanyardBadge from '@/components/AuthLanyardBadge'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -33,8 +32,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <Header />
           {children}
-          {/* Mini lanyard badge — only shown when user is logged in */}
-          <AuthLanyardBadge />
         </AuthProvider>
         
         {/* Init UnicornStudio wrapper script */}

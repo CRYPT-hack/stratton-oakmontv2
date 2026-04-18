@@ -164,30 +164,45 @@ export default function HedgeFundPage() {
     addLog("System Initialized. Await Signal.");
   }, []);
 
-  const fetchMiniChartsData = async () => {
-    const defaultTickers = [
-      { t: 'RELIANCE', n: 'Reliance Industries Limited' },
-      { t: 'HDFCBANK', n: 'HDFC Bank Limited' },
-      { t: 'BHARTIARTL', n: 'Bharti Airtel Limited' },
-      { t: 'SBIN', n: 'State Bank of India' }
-    ];
+  const fetchMiniChartsData = useCallback(async (tickerList?: string) => {
+    const tickersToFetch = (tickerList || ptTickers)
+      .split(',')
+      .map(t => t.trim().toUpperCase())
+      .filter(Boolean)
+      .slice(0, 4); // Limit to 4 for grid aesthetics
+
+    if (tickersToFetch.length === 0) return;
+
     const newData: Record<string, { name: string, data: any[] }> = {};
-    for (const item of defaultTickers) {
+    for (const t of tickersToFetch) {
       try {
-        const r = await fetch(`/api/history/${item.t}?period=3mo`);
+        const r = await fetch(`/api/history/${t}?period=3mo`);
         const d = await r.json();
         if (d.history) {
-          newData[item.t] = {
-            name: item.n,
+          newData[t] = {
+            name: t, // We don't have full names here, but ticker is fine
             data: d.history.map((h: any) => ({
-              time: h.date, value: h.close, volume: h.volume
+              time: h.date, 
+              open: h.open, 
+              high: h.high, 
+              low: h.low, 
+              close: h.close, 
+              volume: h.volume
             }))
           };
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error(`Failed to fetch mini chart for ${t}`, e);
+      }
     }
     setMiniCharts(newData);
-  };
+  }, [ptTickers]);
+
+  useEffect(() => {
+    if (activeTab === 'paper') {
+      fetchMiniChartsData();
+    }
+  }, [activeTab, ptTickers, fetchMiniChartsData]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -197,7 +212,7 @@ export default function HedgeFundPage() {
       }, 10000); // 10s auto cycle
     }
     return () => clearInterval(interval);
-  }, [isAutoTrading /* intentionally loose dependencies to prevent constant reset */]);
+  }, [isAutoTrading]);
 
   useEffect(() => {
     if (activePaperTicker) fetchHistoryForPaperChart(activePaperTicker);
@@ -1051,37 +1066,6 @@ export default function HedgeFundPage() {
                     ))}
                   </div>
 
-                  {/* Advanced Chart */}
-                  <div className="glass-panel text-white rounded-2xl border border-white/10 p-5 mb-4">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-                      <h3 className="text-sm font-medium flex items-center gap-2">
-                        <iconify-icon icon="solar:chart-square-linear" className="text-blue-400" />
-                        Trading View
-                      </h3>
-                      <div className="flex gap-2 flex-wrap">
-                        {Object.keys(paperPortfolio.positions || {}).length > 0 ? (
-                          Object.keys(paperPortfolio.positions).map(ticker => (
-                            <button key={ticker} onClick={() => setActivePaperTicker(ticker)} className={`text-[10px] px-3 py-1 rounded-full uppercase tracking-widest transition-colors ${activePaperTicker === ticker ? 'bg-blue-500 text-white font-bold' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}>
-                              {ticker}
-                            </button>
-                          ))
-                        ) : (
-                          <span className="text-[10px] text-white/30 uppercase tracking-widest">No Active Positions</span>
-                        )}
-                      </div>
-                    </div>
-                    {activePaperTicker && paperChartData.ohlc.length > 0 ? (
-                      <div className="p-1 bg-gradient-to-b from-blue-500/10 to-transparent rounded-2xl overflow-hidden">
-                        <AdvancedChart data={paperChartData.ohlc} volumeData={paperChartData.volume} markers={paperChartData.markers} height={450} ticker={activePaperTicker} />
-                      </div>
-                    ) : (
-                      <div className="h-[350px] flex items-center justify-center border border-dashed border-white/10 rounded-xl bg-white/[0.02]">
-                        <p className="text-sm text-white/30">
-                          {activePaperTicker ? 'Loading Chart Data...' : 'Select a ticker to view technicals'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
 
                   {/* Positions */}
                   {Object.keys(paperPortfolio.positions).length > 0 && (
@@ -1269,26 +1253,6 @@ export default function HedgeFundPage() {
               )}
             </SpotlightCard>
 
-            {/* Always-On Rules */}
-            <SpotlightCard className="glass-panel rounded-2xl p-6" spotlightColor="rgba(82,39,255,0.05)">
-              <h3 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
-                <iconify-icon icon="solar:code-circle-linear" className="text-white/40" />
-                Hard-Coded Guard Rails
-                <span className="text-[10px] text-white/30 ml-auto">Never overridden by AI</span>
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { code: `if portfolio_value < start * 0.92:\n  liquidate_all()`, label: 'Stop-Loss Trigger', color: 'border-red-500/20' },
-                  { code: `if corr(A, B, 60d) > 0.7:\n  group_cap = 0.40`, label: 'Correlation Cap', color: 'border-amber-500/20' },
-                  { code: `max_position = 0.20\n# per ticker`, label: 'Position Limit', color: 'border-blue-500/20' },
-                ].map(({ code, label, color }) => (
-                  <div key={label} className={`p-4 rounded-xl bg-black/60 border ${color}`}>
-                    <pre className="text-[11px] text-emerald-300 font-mono mb-2 whitespace-pre">{code}</pre>
-                    <div className="text-[10px] text-white/40 uppercase tracking-widest">{label}</div>
-                  </div>
-                ))}
-              </div>
-            </SpotlightCard>
           </div>
         )}
       </div>

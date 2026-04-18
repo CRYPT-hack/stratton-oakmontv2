@@ -800,13 +800,18 @@ async def analyze_file(file: UploadFile = File(...), query: str = Form(default="
 @app.get("/api/history/{symbol}")
 async def get_history(symbol: str, period: str = "1mo"):
     try:
-        # Handle index symbols like NIFTY 50 -> ^NSEI
-        ticker_sym = symbol
-        if symbol.upper() == "NIFTY 50": ticker_sym = "^NSEI"
-        elif symbol.upper() == "SENSEX": ticker_sym = "^BSESN"
-        elif symbol.upper() == "NIFTY BANK": ticker_sym = "^NSEBANK"
-        elif not ticker_sym.startswith("^") and not ticker_sym.endswith(".NS") and not ticker_sym.endswith(".BO"):
-            ticker_sym = f"{ticker_sym.upper()}.NS"
+        # Common US tech tickers to avoid adding .NS
+        US_TICKERS = {"AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "TSLA", "NVDA", "NFLX", "AMD"}
+        
+        ticker_sym = symbol.upper()
+        if ticker_sym == "NIFTY 50": ticker_sym = "^NSEI"
+        elif ticker_sym == "SENSEX": ticker_sym = "^BSESN"
+        elif ticker_sym == "NIFTY BANK": ticker_sym = "^NSEBANK"
+        elif ticker_sym in US_TICKERS:
+            pass # Keep as is for US stocks
+        elif not ticker_sym.startswith("^") and "." not in ticker_sym:
+            # Default to .NS for Indian stocks if no suffix provided and not a known US ticker
+            ticker_sym = f"{ticker_sym}.NS"
 
         ticker = yf.Ticker(ticker_sym)
         hist = await asyncio.to_thread(lambda: ticker.history(period=period))

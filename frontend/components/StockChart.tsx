@@ -1,31 +1,7 @@
 'use client';
 
-import React from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Filler,
-  Legend,
-  ChartOptions,
-  ScriptableContext
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Filler,
-  Legend
-);
+import React, { useEffect, useRef } from 'react';
+import { createChart, ColorType, AreaSeries } from 'lightweight-charts';
 
 interface StockChartProps {
   data: { date: string; close: number }[];
@@ -35,77 +11,77 @@ interface StockChartProps {
 }
 
 export default function StockChart({ data, label = 'Price', color = '#3b82f6', height = 200 }: StockChartProps) {
-  const chartData = {
-    labels: data.map(d => d.date),
-    datasets: [
-      {
-        fill: true,
-        label: label,
-        data: data.map(d => d.close),
-        borderColor: color,
-        borderWidth: 2,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        tension: 0.4,
-        backgroundColor: (context: ScriptableContext<'line'>) => {
-          const ctx = context.chart.ctx;
-          const gradient = ctx.createLinearGradient(0, 0, 0, height);
-          gradient.addColorStop(0, `${color}33`);
-          gradient.addColorStop(1, `${color}00`);
-          return gradient;
-        },
-      },
-    ],
-  };
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
-  const options: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
+  useEffect(() => {
+    if (!chartContainerRef.current || data.length === 0) return;
+
+    const chart = createChart(chartContainerRef.current, {
+      layout: {
+        background: { type: ColorType.Solid, color: 'transparent' },
+        textColor: 'rgba(255, 255, 255, 0.4)',
+        fontSize: 10,
+        fontFamily: 'Inter, system-ui, sans-serif',
       },
-      tooltip: {
-        mode: 'index',
-        intersect: false,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-        padding: 10,
-        displayColors: false,
+      grid: {
+        vertLines: { visible: false },
+        horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
       },
-    },
-    scales: {
-      x: {
-        display: false,
-      },
-      y: {
-        display: true,
-        grid: {
-          display: true,
-          color: 'rgba(255, 255, 255, 0.05)',
-        },
-        ticks: {
-          color: 'rgba(255, 255, 255, 0.3)',
-          font: {
-            size: 10,
-          },
-          maxTicksLimit: 5,
+      rightPriceScale: {
+        borderVisible: false,
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.1,
         },
       },
-    },
-    interaction: {
-      mode: 'nearest',
-      axis: 'x',
-      intersect: false,
-    },
-  };
+      timeScale: {
+        borderVisible: false,
+        fixLeftEdge: true,
+        fixRightEdge: true,
+        visible: false, // Match original StockChart behavior
+      },
+      handleScroll: false,
+      handleScale: false,
+      crosshair: {
+        vertLine: { color: 'rgba(255, 255, 255, 0.1)' },
+        horzLine: { color: 'rgba(255, 255, 255, 0.1)' },
+      }
+    });
+
+    const series = chart.addSeries(AreaSeries, {
+      lineColor: color,
+      topColor: `${color}33`,
+      bottomColor: `${color}00`,
+      lineWidth: 2,
+      priceLineVisible: false,
+      lastValueVisible: false,
+    });
+
+    // Ensure data is sorted by time
+    const sortedData = [...data]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .map(d => ({
+        time: d.date,
+        value: d.close,
+      }));
+
+    series.setData(sortedData);
+    chart.timeScale().fitContent();
+
+    const handleResize = () => {
+      if (chartContainerRef.current) {
+        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      chart.remove();
+    };
+  }, [data, color, height]);
 
   return (
-    <div style={{ height: `${height}px` }} className="w-full">
-      <Line data={chartData} options={options} />
-    </div>
+    <div ref={chartContainerRef} className="w-full" style={{ height: `${height}px` }} />
   );
 }

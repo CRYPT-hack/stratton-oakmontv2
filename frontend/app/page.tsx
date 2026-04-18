@@ -495,37 +495,6 @@ export default function Dashboard() {
           </div>
       </section>
 
-      {/* Powered By LogoLoop Section */}
-      <section className="border-b border-white/5 py-12 overflow-hidden bg-black flex justify-center flex-col items-center">
-        <h3 className="text-white/40 text-sm font-medium mb-8 tracking-widest uppercase cursor-target">Trusted By The Fintech Ecosystem</h3>
-        <div style={{ height: '80px', width: '100%', position: 'relative' }} className="cursor-target">
-            <LogoLoop
-                logos={[
-                    { title: "NSE",        node: <span className="text-2xl font-bold text-white/70">NSE</span>,          href: "#" },
-                    { title: "BSE",        node: <span className="text-2xl font-bold text-white/70">BSE</span>,          href: "#" },
-                    { title: "SEBI",       node: <span className="text-2xl font-bold text-white/70">SEBI</span>,         href: "#" },
-                    { title: "RBI",        node: <span className="text-2xl font-bold text-white/70">RBI</span>,          href: "#" },
-                    { title: "Zerodha",    node: <span className="text-2xl font-bold text-white/70">Zerodha</span>,      href: "#" },
-                    { title: "Upstox",     node: <span className="text-2xl font-bold text-white/70">Upstox</span>,       href: "#" },
-                    { title: "Angel One",  node: <span className="text-2xl font-bold text-white/70">Angel One</span>,   href: "#" },
-                    { title: "HDFC Bank",  node: <span className="text-2xl font-bold text-white/70">HDFC&nbsp;Bank</span>, href: "#" },
-                    { title: "ICICI",      node: <span className="text-2xl font-bold text-white/70">ICICI</span>,        href: "#" },
-                    { title: "Nifty 50",   node: <span className="text-2xl font-bold text-white/70">Nifty&nbsp;50</span>, href: "#" },
-                    { title: "Bloomberg",  node: <span className="text-2xl font-bold text-white/70">Bloomberg</span>,   href: "#" },
-                    { title: "Reuters",    node: <span className="text-2xl font-bold text-white/70">Reuters</span>,     href: "#" },
-                ]}
-                speed={40}
-                direction="left"
-                logoHeight={40}
-                gap={60}
-                hoverSpeed={0}
-                scaleOnHover
-                fadeOut
-                fadeOutColor="#000000"
-                ariaLabel="Fintech partners"
-            />
-        </div>
-      </section>
 
       {/* Stats Section with CountUp */}
       <section id="sectors" className="border-b border-white/5 bg-white/[0.02]">

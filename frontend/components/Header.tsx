@@ -51,7 +51,6 @@ export default function Header() {
               { label: 'Portfolios', href: '/portfolios' },
               { label: 'Intelligence', href: '/intelligence' },
               { label: 'Sectors', href: '/sectors' },
-              { label: 'Workflow', href: '/workflow' },
               { label: 'Hedge Fund', href: '/hedge-fund' },
             ]}
             particleCount={12}
@@ -59,7 +58,7 @@ export default function Header() {
             particleR={80}
             animationTime={550}
             timeVariance={250}
-            colors={[1, 2, 3, 1, 2, 4]}
+            colors={[1, 2, 3, 1, 2]}
             initialActiveIndex={0}
           />
         </div>
