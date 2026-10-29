@@ -41,3 +41,6 @@ npm-debug.log*
 .idea/
 .vscode/
 *.swp
+
+# Filled-in Kubernetes secrets; only secrets.example.yaml belongs in git
+kubernetes/secrets.yaml

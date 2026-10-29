@@ -18,7 +18,10 @@ spec:
         imagePullPolicy: Never
         env:
         - name: DATABASE_URL
-          value: "postgresql://portai_user:portai_password@portai-postgres:5432/portai_db"
+          valueFrom:
+            secretKeyRef:
+              name: portai-secrets
+              key: database-url
         - name: REDIS_URL
           value: "redis://portai-redis:6379/0"
         - name: OPENAI_API_KEY
